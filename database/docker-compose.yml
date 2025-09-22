@@ -1,0 +1,44 @@
+version: "3.8"
+
+services:
+      
+  main-db:
+    image: postgres:alpine
+    container_name: main-db
+    ports:
+      - "6000:5432"
+    environment:
+      PGDATA: /var/lib/postgresql/data/pgdata
+      POSTGRES_USER: ${DB_MAIN_USER}
+      POSTGRES_PASSWORD: ${DB_MAIN_PASS}
+      POSTGRES_DB: primary_db
+    volumes:
+      - ./main-db:/var/lib/postgresql/data
+    command: [
+      "postgres",
+      "-c", "wal_level=logical",
+      "-c", "max_replication_slots=10",
+      "-c", "max_wal_senders=10"
+    ]
+    networks:
+      app-net: {}
+
+  worker-db:
+    image: postgres:alpine
+    container_name: worker-db
+    ports:
+      - "6001:5432"
+    environment:
+      PGDATA: /var/lib/postgresql/data/pgdata
+      POSTGRES_USER: ${DB_WORKER_USER}
+      POSTGRES_PASSWORD: ${DB_WORKER_PASS}
+      POSTGRES_DB: secondary_db
+    volumes:
+      - ./worker-db:/var/lib/postgresql/data
+    networks:
+      app-net: {}
+
+networks:
+  app-net:
+    external: true
+    name: "pg-cluster-net"
