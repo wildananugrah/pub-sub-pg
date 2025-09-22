@@ -1,3 +1,2 @@
-main-db
-worker-db
+node_modules
 .env
