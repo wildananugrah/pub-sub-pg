@@ -1,0 +1,277 @@
+### PostgreSQL Pub/Sub API Tests
+### This file can be used with REST Client extension in VS Code or similar tools
+
+@baseUrl = http://localhost:3000
+@contentType = application/json
+
+### ================================
+### HEALTH CHECK
+### ================================
+
+### Check Database Connectivity
+GET {{baseUrl}}/health HTTP/1.1
+
+### ================================
+### USER CRUD OPERATIONS
+### ================================
+
+### Get All Users (READ from replica DB on port 6001)
+GET {{baseUrl}}/api/users HTTP/1.1
+
+### --------------------------------
+
+### Get User by ID (READ from replica DB on port 6001)
+@userId = 9e58959b-c762-48f0-8ede-1a091293afb7
+GET {{baseUrl}}/api/users/{{userId}} HTTP/1.1
+
+### --------------------------------
+
+### Create User - Example 1 (WRITE to primary DB on port 6000)
+POST {{baseUrl}}/api/users HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "username": "johndoe",
+  "email": "john.doe@example.com",
+  "password": "SecurePass123!",
+  "first_name": "John",
+  "last_name": "Doe"
+}
+
+### --------------------------------
+
+### Create User - Example 2 (WRITE to primary DB on port 6000)
+POST {{baseUrl}}/api/users HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "username": "janesmith",
+  "email": "jane.smith@example.com",
+  "password": "AnotherPass456!",
+  "first_name": "Jane",
+  "last_name": "Smith"
+}
+
+### --------------------------------
+
+### Create User - Example 3 with minimal fields
+POST {{baseUrl}}/api/users HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "username": "bobuser",
+  "email": "bob@example.com",
+  "password": "BobPass789!"
+}
+
+### --------------------------------
+
+### Create User - Invalid (Missing Required Fields)
+POST {{baseUrl}}/api/users HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "username": "testuser"
+}
+
+### --------------------------------
+
+### Create User - Duplicate Email (Should Fail)
+POST {{baseUrl}}/api/users HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "username": "duplicate_test",
+  "email": "john.doe@example.com",
+  "password": "TestPass123!"
+}
+
+### --------------------------------
+
+### Update User - Full Update (WRITE to primary DB on port 6000)
+### Replace the UUID with an actual user ID from your database
+PUT {{baseUrl}}/api/users/123e4567-e89b-12d3-a456-426614174000 HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "username": "johndoe_updated",
+  "email": "john.updated@example.com",
+  "first_name": "John Updated",
+  "last_name": "Doe Updated",
+  "is_active": true,
+  "email_verified": true
+}
+
+### --------------------------------
+
+### Update User - Partial Update with PATCH (WRITE to primary DB on port 6000)
+### Replace the UUID with an actual user ID from your database
+PATCH {{baseUrl}}/api/users/123e4567-e89b-12d3-a456-426614174000 HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "first_name": "John Patched",
+  "email_verified": true
+}
+
+### --------------------------------
+
+### Update User - Change Password
+### Replace the UUID with an actual user ID from your database
+PATCH {{baseUrl}}/api/users/123e4567-e89b-12d3-a456-426614174000 HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "password": "NewSecurePassword123!"
+}
+
+### --------------------------------
+
+### Update User - Deactivate User
+### Replace the UUID with an actual user ID from your database
+PATCH {{baseUrl}}/api/users/123e4567-e89b-12d3-a456-426614174000 HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "is_active": false
+}
+
+### --------------------------------
+
+### Delete User (WRITE to primary DB on port 6000)
+### Replace the UUID with an actual user ID from your database
+DELETE {{baseUrl}}/api/users/123e4567-e89b-12d3-a456-426614174000 HTTP/1.1
+
+### --------------------------------
+
+### Delete Non-Existent User (Should return 404)
+DELETE {{baseUrl}}/api/users/999e9999-e99b-99d9-a999-999999999999 HTTP/1.1
+
+### ================================
+### ERROR TESTING
+### ================================
+
+### Test 404 - Invalid Route
+GET {{baseUrl}}/api/invalid-route HTTP/1.1
+
+### --------------------------------
+
+### Test Invalid UUID Format
+GET {{baseUrl}}/api/users/invalid-uuid-format HTTP/1.1
+
+### ================================
+### REPLICATION TESTING SEQUENCE
+### ================================
+### Run these tests in sequence to verify replication
+
+### Step 1: Create a test user (writes to primary)
+POST {{baseUrl}}/api/users HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "username": "replication_test",
+  "email": "replication@test.com",
+  "password": "TestReplication123!",
+  "first_name": "Replication",
+  "last_name": "Test"
+}
+
+### Step 2: Immediately read all users (reads from replica)
+### The new user should appear if replication is working
+GET {{baseUrl}}/api/users HTTP/1.1
+
+### Step 3: Update the test user (writes to primary)
+### Replace UUID with the actual ID from Step 1
+PATCH {{baseUrl}}/api/users/{{userId}} HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "first_name": "Replication Updated",
+  "email_verified": true
+}
+
+### Step 4: Read the updated user (reads from replica)
+### Should show the updated data if replication is working
+GET {{baseUrl}}/api/users/{{userId}} HTTP/1.1
+
+### Step 5: Delete the test user (writes to primary)
+DELETE {{baseUrl}}/api/users/{{userId}} HTTP/1.1
+
+### Step 6: Verify deletion (reads from replica)
+### Should return 404 if replication is working
+GET {{baseUrl}}/api/users/{{userId}} HTTP/1.1
+
+### ================================
+### BULK OPERATIONS FOR LOAD TESTING
+### ================================
+
+### Create Multiple Users Quickly
+### User 1
+POST {{baseUrl}}/api/users HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "username": "user_001",
+  "email": "user001@loadtest.com",
+  "password": "LoadTest123!",
+  "first_name": "Load",
+  "last_name": "Test001"
+}
+
+### User 2
+POST {{baseUrl}}/api/users HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "username": "user_002",
+  "email": "user002@loadtest.com",
+  "password": "LoadTest123!",
+  "first_name": "Load",
+  "last_name": "Test002"
+}
+
+### User 3
+POST {{baseUrl}}/api/users HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "username": "user_003",
+  "email": "user003@loadtest.com",
+  "password": "LoadTest123!",
+  "first_name": "Load",
+  "last_name": "Test003"
+}
+
+### ================================
+### VALIDATION TESTING
+### ================================
+
+### Test Email Validation - Invalid Email Format
+POST {{baseUrl}}/api/users HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "username": "invalid_email_test",
+  "email": "not-an-email",
+  "password": "TestPass123!"
+}
+
+### Test Username Length - Too Short
+POST {{baseUrl}}/api/users HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "username": "a",
+  "email": "short@test.com",
+  "password": "TestPass123!"
+}
+
+### Test Password - Empty Password
+POST {{baseUrl}}/api/users HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "username": "empty_pass",
+  "email": "emptypass@test.com",
+  "password": ""
+}
