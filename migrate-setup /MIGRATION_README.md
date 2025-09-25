@@ -2,20 +2,6 @@
 
 This directory contains scripts to migrate all databases from one PostgreSQL server to another.
 
-## Configuration
-
-**Source Database:**
-- Host: 52.74.112.75
-- Port: 5432
-- User: pg
-- Password: ~nagha2025yasha@~
-
-**Target Database:**
-- Host: 52.74.112.75
-- Port: 6000
-- User: pg
-- Password: p@ssw0rd1234
-
 ## Available Scripts
 
 ### 1. Bash Script (migrate_postgres_databases.sh)
