@@ -340,4 +340,16 @@ done
 4. **Document table dependencies** - Know which tables must stay in sync
 5. **Plan maintenance windows** - Some operations require replication pause
 
-23.37
+# extras
+
+``` sql
+SELECT 
+    datname as "Database",
+    pg_size_pretty(pg_database_size(datname)) as "Size"
+FROM pg_database 
+WHERE datistemplate = false 
+ORDER BY pg_database_size(datname) DESC;
+
+SELECT pg_size_pretty(sum(pg_database_size(datname))) as "Total Size"
+FROM pg_database WHERE datistemplate = false
+```

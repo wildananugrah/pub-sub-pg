@@ -4,17 +4,17 @@
 # This script sets up logical replication between source (publisher) and target (subscriber) databases
 # Logical replication allows selective table replication and real-time sync
 
-# Source database configuration (Publisher)
-SOURCE_HOST="52.74.112.75"
-SOURCE_PORT="5432"
-SOURCE_USER="pg"
-SOURCE_PASSWORD="~nagha2025yasha@~"
+# Source database configuration
+SOURCE_HOST=""
+SOURCE_PORT=""
+SOURCE_USER=""
+SOURCE_PASSWORD=""
 
-# Target database configuration (Subscriber)
-TARGET_HOST="52.74.112.75"
-TARGET_PORT="6000"
-TARGET_USER="pg"
-TARGET_PASSWORD="p@ssw0rd1234"
+# Target database configuration
+TARGET_HOST=""
+TARGET_PORT=""
+TARGET_USER=""
+TARGET_PASSWORD=""
 
 # Replication configuration
 REPLICATION_USER="replicator"
