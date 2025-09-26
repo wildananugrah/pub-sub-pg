@@ -4,16 +4,16 @@
 # This avoids version mismatch issues by using PostgreSQL 16 client tools
 
 # Source database configuration
-SOURCE_HOST=""
-SOURCE_PORT=""
-SOURCE_USER=""
-SOURCE_PASSWORD=""
+SOURCE_HOST="52.74.112.75"
+SOURCE_PORT="5432"
+SOURCE_USER="pg"
+SOURCE_PASSWORD="~nagha2025yasha@~"
 
 # Target database configuration
-TARGET_HOST=""
-TARGET_PORT=""
-TARGET_USER=""
-TARGET_PASSWORD=""
+TARGET_HOST="52.74.112.75"
+TARGET_PORT="6000"
+TARGET_USER="pg"
+TARGET_PASSWORD="p@ssw0rd1234"
 
 # Databases to migrate
 # DATABASES="devmode serayuopakprogo"

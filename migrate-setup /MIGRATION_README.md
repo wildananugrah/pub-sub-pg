@@ -2,6 +2,20 @@
 
 This directory contains scripts to migrate all databases from one PostgreSQL server to another.
 
+## Configuration
+
+**Source Database:**
+- Host: 52.74.112.75
+- Port: 5432
+- User: pg
+- Password: ~nagha2025yasha@~
+
+**Target Database:**
+- Host: 52.74.112.75
+- Port: 6000
+- User: pg
+- Password: p@ssw0rd1234
+
 ## Available Scripts
 
 ### 1. Bash Script (migrate_postgres_databases.sh)
@@ -230,9 +244,11 @@ sudo systemctl restart postgresql
 ```bash
 # For all databases
 ./setup_logical_replication.sh --batch
+nohup ./setup_logical_replication.sh --batch > replication.log 2>&1 &
 
 # Or for specific database
 ./setup_logical_replication.sh --setup-all devmode
+./setup_logical_replication.sh --setup-all postgres
 ```
 
 4. **Monitor Replication**:
@@ -279,6 +295,7 @@ psql -h target_host -U pg -d dbname -c "SELECT * FROM pg_subscription;"
 
 # Check replication lag
 ./monitor_replication.sh --once dbname
+./monitor_replication.sh --once postgres
 ```
 
 #### Common Issues
@@ -326,16 +343,87 @@ done
 4. **Document table dependencies** - Know which tables must stay in sync
 5. **Plan maintenance windows** - Some operations require replication pause
 
-# extras
+```sh
+ Yes! I've created comprehensive queries and tools to get complete pub/sub
+  information in PostgreSQL. Here's what I've provided:
 
-``` sql
-SELECT 
-    datname as "Database",
-    pg_size_pretty(pg_database_size(datname)) as "Size"
-FROM pg_database 
-WHERE datistemplate = false 
-ORDER BY pg_database_size(datname) DESC;
+  1. SQL Queries File (check_replication_status.sql)
 
-SELECT pg_size_pretty(sum(pg_database_size(datname))) as "Total Size"
-FROM pg_database WHERE datistemplate = false
+  Contains 16 different query types:
+
+  Publication Queries (Run on Publisher):
+
+  -- See all publications
+  SELECT pubname, puballtables, pubinsert, pubupdate FROM pg_publication;
+
+  -- See which tables are published
+  SELECT p.pubname, pt.schemaname, pt.tablename FROM pg_publication p
+  JOIN pg_publication_tables pt ON p.pubname = pt.pubname;
+
+  -- See who's subscribing (replication slots)
+  SELECT slot_name, active, client_addr FROM pg_replication_slots rs
+  LEFT JOIN pg_stat_replication sr ON sr.pid = rs.active_pid;
+
+  Subscription Queries (Run on Subscriber):
+
+  -- See all subscriptions
+  SELECT subname, subenabled, subconninfo, subpublications FROM pg_subscription;
+
+  -- See table sync status
+  SELECT s.subname, sr.tablename, sr.srsubstate FROM pg_subscription s
+  JOIN pg_subscription_rel sr ON s.oid = sr.srsubid;
+
+  2. Interactive Script (check_replication_info.sh)
+
+  Features:
+  - Complete topology mapping - Shows publisher → subscriber relationships
+  - Detailed status for each database
+  - Summary reports
+  - Interactive and command-line modes
+
+  Usage Examples:
+
+  Quick Check:
+
+  # Check specific database
+  ./check_replication_info.sh --db devmode
+
+  # Show complete replication topology
+  ./check_replication_info.sh --topology
+
+  # Generate summary report
+  ./check_replication_info.sh --summary
+
+  Key Information You'll Get:
+
+  1. Publications - What's being published from source
+  2. Subscriptions - What target is subscribing to
+  3. Replication Slots - Active connections between pub/sub
+  4. Table Sync Status - Which tables are synchronized
+  5. Lag Information - How far behind subscriber is
+  6. Connection Details - IP addresses, connection strings
+
+  Most Useful Queries:
+
+  To see complete pub→sub mapping:
+  -- Run on publisher
+  SELECT
+      pubname as "Publication",
+      slot_name as "Used by Slot",
+      client_addr as "Subscriber IP",
+      active as "Active"
+  FROM pg_publication p
+  LEFT JOIN pg_replication_slots rs ON rs.database = current_database()
+  LEFT JOIN pg_stat_replication sr ON sr.pid = rs.active_pid;
+
+  To see what's subscribed where:
+  -- Run on subscriber
+  SELECT
+      subname as "Subscription",
+      subpublications[1] as "Publication",
+      substring(subconninfo from 'host=([^ ]+)') as "Publisher Host",
+      subenabled
+  FROM pg_subscription;
+
+  The script provides a complete view of your logical replication topology!
 ```
